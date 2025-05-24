@@ -38,38 +38,50 @@ class TestTaskDecorator:
         # Check if task description is set correctly
         assert test_task.__taskinity_task__["description"] == "Test task description"
     
-    def test_task_decorator_with_validation(self):
-        """Test task decorator with input and output validation."""
-        def validate_input(args):
+    def test_task_decorator_with_input_validation(self):
+        """Test task decorator with input validation."""
+        def validate_input(*args):
+            if len(args) != 2:
+                raise ValueError("Expected exactly 2 arguments")
             x, y = args
             if not isinstance(x, int) or not isinstance(y, int):
                 raise ValueError("Inputs must be integers")
             return True
         
+        @task(validate_input=validate_input)
+        def test_task(x, y):
+            return x + y
+        
+        # Check if validation function is set correctly
+        assert test_task.__taskinity_task__["validate_input"] == validate_input
+        
+        # Test with valid inputs
+        assert test_task(2, 3) == 5
+        
+        # Test with invalid inputs
+        with pytest.raises(ValueError, match="Inputs must be integers"):
+            test_task("2", 3)
+    
+    def test_task_decorator_with_output_validation(self):
+        """Test task decorator with output validation."""
         def validate_output(result):
             if not isinstance(result, int):
                 raise ValueError("Output must be an integer")
             return True
         
-        @task(validate_input=validate_input, validate_output=validate_output)
-        def test_task(x, y):
-            return x + y
+        # Create a function that returns a string instead of an int
+        def failing_function():
+            return "not an integer"
         
-        # Check if validation functions are set correctly
-        assert test_task.__taskinity_task__["validate_input"] == validate_input
+        # Apply the task decorator with output validation
+        test_task = task(validate_output=validate_output)(failing_function)
+        
+        # Check if validation function is set correctly
         assert test_task.__taskinity_task__["validate_output"] == validate_output
         
-        # Test with valid inputs and output
-        assert test_task(2, 3) == 5
-        
-        # Test with invalid inputs
-        with pytest.raises(ValueError):
-            test_task("2", 3)
-        
-        # Test with invalid output (mock the function to return a string)
-        with patch.object(test_task, "__wrapped__", return_value="5"):
-            with pytest.raises(ValueError):
-                test_task(2, 3)
+        # Test that output validation fails with the expected error
+        with pytest.raises(ValueError, match="Output must be an integer"):
+            test_task()
 
 
 class TestFlowDecorator:
