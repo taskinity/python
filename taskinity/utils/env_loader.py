@@ -162,7 +162,16 @@ class EnvLoader:
         if value is None:
             return default
         
-        return value.lower() in ("true", "yes", "1", "y", "t")
+        # Check for positive boolean values
+        if value.lower() in ("true", "yes", "1", "y", "t"):
+            return True
+        # Check for negative boolean values
+        elif value.lower() in ("false", "no", "0", "n", "f"):
+            return False
+        # If not a recognized boolean value, return default
+        else:
+            self.logger.warning(f"Environment variable {key} is not a valid boolean: {value}")
+            return default
     
     def get_list(self, key: str, separator: str = ",", default: Optional[List[str]] = None) -> Optional[List[str]]:
         """

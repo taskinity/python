@@ -192,7 +192,9 @@ def _generate_dsl_from_structure(
         
         # Add docstring if available and requested
         if include_docstrings and func_info['docstring']:
-            dsl_lines.append(f"        description: \"{func_info['docstring'].replace('\"', '\\\"')}\"")
+            # Fix the syntax error by using a different approach to handle quotes
+            escaped_docstring = func_info['docstring'].replace('"', '""')
+            dsl_lines.append(f"        description: \"{escaped_docstring}\"")
         
         # Add code block
         dsl_lines.append(f"        code: |")

@@ -36,31 +36,31 @@ test-basic:
 ## Run email processing tests
 test-email:
 	@echo "Running email processing tests..."
-	pytest -xvs examples/email_processing/tests/
+	pytest -xvs /home/tom/github/taskinity/examples/email_processing/tests/
 
 ## Run basic flow example
 example-basic:
 	@echo -e "Running basic flow example..."
-	python examples/basic_flow.py --mock
+	python /home/tom/github/taskinity/examples/basic_flow.py --mock
 
 ## Run email processing example
 example-email:
 	@echo -e "Running email processing example..."
-	python examples/email_flow.py --mock
+	python /home/tom/github/taskinity/examples/email_flow.py --mock
 
 ## Run data processing example
 example-data:
 	@echo -e "Running data processing example..."
-	python examples/data_flow.py --mock
+	python /home/tom/github/taskinity/examples/data_flow.py --mock
 
 ## Run API integration example
 example-api:
 	@echo -e "Running API integration example..."
-	python examples/api_flow.py --mock
+	python /home/tom/github/taskinity/examples/api_flow.py --mock
 
 ## Build and publish package to PyPI
 publish:
 	@echo "Building and publishing package..."
-	poetry version --patch
+	poetry version patch
 	poetry build
 	poetry publish

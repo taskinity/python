@@ -62,7 +62,7 @@ def task(name: Optional[str] = None,
         task_desc = description or func.__doc__ or ""
         
         # Register function in the global registry
-        REGISTRY[func.__name__] = {
+        task_info = {
             "name": task_name,
             "description": task_desc,
             "function": func,
@@ -71,8 +71,13 @@ def task(name: Optional[str] = None,
             "validate_output": validate_output,
         }
         
+        REGISTRY[func.__name__] = task_info
+        
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            # Add task information to the wrapper function for testing
+            wrapper.__taskinity_task__ = task_info
+            
             start_time = time.time()
             task_id = f"{func.__name__}_{datetime.now().strftime('%Y%m%d%H%M%S%f')}"
             logger.info(f"Starting task: {task_name}")

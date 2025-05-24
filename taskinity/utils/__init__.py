@@ -18,7 +18,23 @@ from taskinity.utils.env_loader import (
     EnvLoader
 )
 
+from taskinity.utils.performance import (
+    timed_execution,
+    retry,
+    cache_result
+)
+
+from taskinity.utils.validation import (
+    validate_json,
+    validate_schema
+)
+
+from taskinity.utils.logging import (
+    setup_logger
+)
+
 __all__ = [
+    # Environment utilities
     "load_env",
     "get_env",
     "get_required_env",
@@ -28,5 +44,17 @@ __all__ = [
     "get_list_env",
     "set_env",
     "env_as_dict",
-    "EnvLoader"
+    "EnvLoader",
+    
+    # Performance utilities
+    "timed_execution",
+    "retry",
+    "cache_result",
+    
+    # Validation utilities
+    "validate_json",
+    "validate_schema",
+    
+    # Logging utilities
+    "setup_logger"
 ]
