@@ -287,18 +287,21 @@ class TestRunFlowFromDSL:
         def task4_func(task2_result, task3_result):
             return f"task4_result({task2_result}, {task3_result})"
         
-        # Mock the task registry
+        # Create task registry with the expected structure
         task_registry = {
-            "task1": task1_func,
-            "task2": task2_func,
-            "task3": task3_func,
-            "task4": task4_func
+            "task1": {"function": task1_func, "name": "task1"},
+            "task2": {"function": task2_func, "name": "task2"},
+            "task3": {"function": task3_func, "name": "task3"},
+            "task4": {"function": task4_func, "name": "task4"}
         }
         
-        # Mock the parse_dsl function to return a predefined flow data
-        with patch("taskinity.parse_dsl", return_value=pytest.fixture(lambda: sample_flow_data)()):
-            # Mock the task registry
-            with patch("taskinity.get_task_registry", return_value=task_registry):
+        # Parse the sample DSL to get the expected flow data
+        flow_data = parse_dsl(sample_dsl)
+        
+        # Mock the parse_dsl function to return the parsed flow data
+        with patch("taskinity.parse_dsl", return_value=flow_data):
+            # Mock the REGISTRY
+            with patch("taskinity.core.taskinity_core.REGISTRY", task_registry):
                 # Run the flow and expect an error
                 with pytest.raises(ValueError, match="Task 1 error"):
                     run_flow_from_dsl(sample_dsl)
