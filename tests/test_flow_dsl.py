@@ -209,10 +209,10 @@ class TestRunFlowFromDSL:
             # Mock the REGISTRY
             with patch("taskinity.core.taskinity_core.REGISTRY", task_registry):
                 # Run the flow
-                result = run_flow_from_dsl(sample_dsl)
+                results = run_flow_from_dsl(sample_dsl)
                 
                 # Check if the result is correct
-                assert result == "task4_result(task2_result(task1_result), task3_result(task1_result))"
+                assert results["task4"] == "task4_result(task2_result(task1_result), task3_result(task1_result))"
     
     def test_run_flow_from_dsl_with_input(self, sample_dsl, sample_flow_data):
         """Test flow execution from DSL with input data."""
@@ -246,10 +246,10 @@ class TestRunFlowFromDSL:
             # Mock the REGISTRY
             with patch("taskinity.core.taskinity_core.REGISTRY", task_registry):
                 # Run the flow with input data
-                result = run_flow_from_dsl(sample_dsl, {"input_param": "test_input"})
+                results = run_flow_from_dsl(sample_dsl, {"input_param": "test_input"})
                 
                 # Check if the result is correct
-                assert result == "task4_result(task2_result(task1_result(test_input)), task3_result(task1_result(test_input)))"
+                assert results["task4"] == "task4_result(task2_result(task1_result(test_input)), task3_result(task1_result(test_input)))"
     
     def test_run_flow_from_dsl_error(self, sample_dsl, sample_flow_data):
         """Test flow execution from DSL with error."""
