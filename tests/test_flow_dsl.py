@@ -241,8 +241,12 @@ class TestRunFlowFromDSL:
             "task4": {"function": task4_func, "name": "task4"}
         }
         
-        # Mock the parse_dsl function to return the sample_flow_data
-        with patch("taskinity.parse_dsl", return_value=sample_flow_data):
+        # Create a copy of the sample flow data and update the first task's inputs
+        flow_data = sample_flow_data.copy()
+        flow_data['tasks']['task1']['inputs'] = ['input_param']
+        
+        # Mock the parse_dsl function to return the modified flow_data
+        with patch("taskinity.parse_dsl", return_value=flow_data):
             # Mock the REGISTRY
             with patch("taskinity.core.taskinity_core.REGISTRY", task_registry):
                 # Run the flow with input data
