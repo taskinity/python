@@ -1,6 +1,6 @@
 # Makefile for Taskinity DSL examples and tests
 
-.PHONY: help install test test-basic test-email example-basic example-email example-data example-api
+.PHONY: help install test test-basic test-email example-basic example-email example-data example-api publish
 
 ## Display help information
 help:
@@ -16,6 +16,7 @@ help:
 	@echo "  example-email    - Run email processing example"
 	@echo "  example-data     - Run data processing example"
 	@echo "  example-api      - Run API integration example"
+	@echo "  publish          - Build and publish package to PyPI"
 
 ## Install dependencies
 install:
@@ -56,3 +57,10 @@ example-data:
 example-api:
 	@echo -e "Running API integration example..."
 	python examples/api_flow.py --mock
+
+## Build and publish package to PyPI
+publish:
+	@echo "Building and publishing package..."
+	poetry version --patch
+	poetry build
+	poetry publish
