@@ -239,12 +239,15 @@ def parse_dsl(dsl_text: str) -> Dict[str, Any]:
         dsl_text: DSL text to parse
         
     Returns:
-        Dictionary containing the parsed flow definition
+        Dictionary containing the parsed flow definition with tasks and connections
     """
-    lines = dsl_text.strip().split("\n")
-    flow_data = {"tasks": {}, "connections": []}
+    lines = [line.strip() for line in dsl_text.strip().split("\n") if line.strip()]
+    flow_data = {"name": "UnnamedFlow", "description": "", "tasks": {}, "connections": []}
     
-    # Extract flow name and description
+    if not lines:
+        return flow_data
+    
+    # Extract flow name
     flow_match = re.match(r"flow\s+(\w+):", lines[0])
     if flow_match:
         flow_data["name"] = flow_match.group(1)
@@ -252,15 +255,13 @@ def parse_dsl(dsl_text: str) -> Dict[str, Any]:
     # Process each line
     current_task = None
     for line in lines[1:]:
-        line = line.strip()
-        
         # Skip empty lines
         if not line:
             continue
         
         # Extract flow description
         if line.startswith("description:"):
-            flow_data["description"] = line.split(":", 1)[1].strip().strip('"')
+            flow_data["description"] = line.split(":", 1)[1].strip().strip('\"')
             continue
         
         # Extract task connections
@@ -268,21 +269,50 @@ def parse_dsl(dsl_text: str) -> Dict[str, Any]:
         if connection_match:
             source, target = connection_match.groups()
             flow_data["connections"].append({"source": source, "target": target})
+            
+            # Ensure source and target tasks exist in the tasks dict
+            for task_name in [source, target]:
+                if task_name not in flow_data["tasks"]:
+                    flow_data["tasks"][task_name] = {
+                        "name": task_name,
+                        "inputs": [],
+                        "outputs": []
+                    }
             continue
         
-        # Extract task definition
+        # Extract task definition (explicit task with properties)
         task_match = re.match(r"task\s+(\w+):", line)
         if task_match:
             current_task = task_match.group(1)
-            flow_data["tasks"][current_task] = {}
+            if current_task not in flow_data["tasks"]:
+                flow_data["tasks"][current_task] = {
+                    "name": current_task,
+                    "inputs": [],
+                    "outputs": []
+                }
             continue
         
-        # Extract task properties
+        # Extract task properties (only if we're in a task context)
         if current_task and ":" in line:
             key, value = line.split(":", 1)
             key = key.strip()
-            value = value.strip().strip('"')
+            value = value.strip().strip('\"')
             flow_data["tasks"][current_task][key] = value
+    
+    # Process connections to update task inputs/outputs
+    for conn in flow_data["connections"]:
+        source = conn["source"]
+        target = conn["target"]
+        
+        if source in flow_data["tasks"] and target not in flow_data["tasks"][source].get("outputs", []):
+            if "outputs" not in flow_data["tasks"][source]:
+                flow_data["tasks"][source]["outputs"] = []
+            flow_data["tasks"][source]["outputs"].append(target)
+        
+        if target in flow_data["tasks"] and source not in flow_data["tasks"][target].get("inputs", []):
+            if "inputs" not in flow_data["tasks"][target]:
+                flow_data["tasks"][target]["inputs"] = []
+            flow_data["tasks"][target]["inputs"].append(source)
     
     return flow_data
 
