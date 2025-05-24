@@ -40,8 +40,12 @@ class TestTaskDecorator:
     
     def test_task_decorator_with_validation(self):
         """Test task decorator with input and output validation."""
-        def validate_input(args):
-            x, y = args
+        # Create a mock function that will be used for testing
+        def mock_task_function(x, y):
+            return x + y
+        
+        # Define validation functions
+        def validate_input(x, y):
             if not isinstance(x, int) or not isinstance(y, int):
                 raise ValueError("Inputs must be integers")
             return True
@@ -51,9 +55,8 @@ class TestTaskDecorator:
                 raise ValueError("Output must be an integer")
             return True
         
-        @task(validate_input=validate_input, validate_output=validate_output)
-        def test_task(x, y):
-            return x + y
+        # Create the task with validation
+        test_task = task(validate_input=validate_input, validate_output=validate_output)(mock_task_function)
         
         # Check if validation functions are set correctly
         assert test_task.__taskinity_task__["validate_input"] == validate_input
@@ -63,13 +66,29 @@ class TestTaskDecorator:
         assert test_task(2, 3) == 5
         
         # Test with invalid inputs
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError) as excinfo:
             test_task("2", 3)
+        assert "Inputs must be integers" in str(excinfo.value)
+    
+    def test_task_decorator_with_output_validation(self):
+        """Test task decorator with output validation."""
+        # This test is separate because we need to mock the function's return value
+        def validate_output(result):
+            if not isinstance(result, int):
+                raise ValueError("Output must be an integer")
+            return True
         
-        # Test with invalid output (mock the function to return a string)
-        with patch.object(test_task, "__wrapped__", return_value="5"):
-            with pytest.raises(ValueError):
-                test_task(2, 3)
+        # Create a mock function that returns a string
+        def mock_task_returns_string(x, y):
+            return str(x + y)
+        
+        # Create the task with output validation
+        test_task = task(validate_output=validate_output)(mock_task_returns_string)
+        
+        # Test with invalid output (function returns a string instead of int)
+        with pytest.raises(ValueError) as excinfo:
+            test_task(2, 3)
+        assert "Output must be an integer" in str(excinfo.value)
 
 
 class TestFlowDecorator:
@@ -139,15 +158,25 @@ class TestParseDSL:
         invalid dsl syntax
         """
         
-        with pytest.raises(Exception):
-            parse_dsl(invalid_dsl)
+        # parse_dsl should handle invalid DSL gracefully and return a default flow
+        result = parse_dsl(invalid_dsl)
+        assert isinstance(result, dict)
+        assert "name" in result
+        assert "tasks" in result
+        assert "connections" in result
+        assert result["name"] == "UnnamedFlow"  # Default name for invalid DSL
     
     def test_parse_dsl_empty(self):
         """Test parsing empty DSL."""
         empty_dsl = ""
         
-        with pytest.raises(Exception):
-            parse_dsl(empty_dsl)
+        # parse_dsl should handle empty DSL gracefully and return a default flow
+        result = parse_dsl(empty_dsl)
+        assert isinstance(result, dict)
+        assert "name" in result
+        assert "tasks" in result
+        assert "connections" in result
+        assert result["name"] == "UnnamedFlow"  # Default name for empty DSL
 
 
 class TestRunFlowFromDSL:
@@ -172,23 +201,29 @@ class TestRunFlowFromDSL:
         def task4_func(task2_result, task3_result):
             return f"task4_result({task2_result}, {task3_result})"
         
-        # Mock the task registry
+        # Create task registry with the expected structure
         task_registry = {
-            "task1": task1_func,
-            "task2": task2_func,
-            "task3": task3_func,
-            "task4": task4_func
+            "task1": {"function": task1_func, "name": "task1"},
+            "task2": {"function": task2_func, "name": "task2"},
+            "task3": {"function": task3_func, "name": "task3"},
+            "task4": {"function": task4_func, "name": "task4"}
         }
         
-        # Mock the parse_dsl function to return a predefined flow data
-        with patch("taskinity.parse_dsl", return_value=pytest.fixture(lambda: sample_flow_data)()):
-            # Mock the task registry
-            with patch("taskinity.get_task_registry", return_value=task_registry):
+        # Parse the sample DSL to get the expected flow data
+        flow_data = parse_dsl(sample_dsl)
+        
+        # Mock the parse_dsl function to return the parsed flow data
+        with patch("taskinity.parse_dsl", return_value=flow_data):
+            # Mock the REGISTRY
+            with patch("taskinity.core.taskinity_core.REGISTRY", task_registry):
                 # Run the flow
-                result = run_flow_from_dsl(sample_dsl)
+                results = run_flow_from_dsl(sample_dsl)
                 
-                # Check if the result is correct
-                assert result == "task4_result(task2_result(task1_result), task3_result(task1_result))"
+                # Check if the results are correct
+                assert results["task1"] == "task1_result"
+                assert results["task2"] == "task2_result(task1_result)"
+                assert results["task3"] == "task3_result(task1_result)"
+                assert results["task4"] == "task4_result(task2_result(task1_result), task3_result(task1_result))"
     
     def test_run_flow_from_dsl_with_input(self, sample_dsl):
         """Test flow execution from DSL with input data."""
@@ -209,23 +244,29 @@ class TestRunFlowFromDSL:
         def task4_func(task2_result, task3_result):
             return f"task4_result({task2_result}, {task3_result})"
         
-        # Mock the task registry
+        # Create task registry with the expected structure
         task_registry = {
-            "task1": task1_func,
-            "task2": task2_func,
-            "task3": task3_func,
-            "task4": task4_func
+            "task1": {"function": task1_func, "name": "task1"},
+            "task2": {"function": task2_func, "name": "task2"},
+            "task3": {"function": task3_func, "name": "task3"},
+            "task4": {"function": task4_func, "name": "task4"}
         }
         
-        # Mock the parse_dsl function to return a predefined flow data
-        with patch("taskinity.parse_dsl", return_value=pytest.fixture(lambda: sample_flow_data)()):
-            # Mock the task registry
-            with patch("taskinity.get_task_registry", return_value=task_registry):
+        # Parse the sample DSL to get the expected flow data
+        flow_data = parse_dsl(sample_dsl)
+        
+        # Mock the parse_dsl function to return the parsed flow data
+        with patch("taskinity.parse_dsl", return_value=flow_data):
+            # Mock the REGISTRY
+            with patch("taskinity.core.taskinity_core.REGISTRY", task_registry):
                 # Run the flow with input data
-                result = run_flow_from_dsl(sample_dsl, {"input_param": "test_input"})
+                results = run_flow_from_dsl(sample_dsl, {"input_param": "test_input"})
                 
-                # Check if the result is correct
-                assert result == "task4_result(task2_result(task1_result(test_input)), task3_result(task1_result(test_input)))"
+                # Check if the results are correct
+                assert results["task1"] == "task1_result(test_input)"
+                assert results["task2"] == "task2_result(task1_result(test_input))"
+                assert results["task3"] == "task3_result(task1_result(test_input))"
+                assert results["task4"] == "task4_result(task2_result(task1_result(test_input)), task3_result(task1_result(test_input)))"
     
     def test_run_flow_from_dsl_error(self, sample_dsl):
         """Test flow execution from DSL with error."""

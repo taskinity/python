@@ -381,11 +381,22 @@ def run_flow_from_dsl(dsl_text: str, input_data: Optional[Dict[str, Any]] = None
         
         # Prepare task arguments
         task_args = {}
-        for dep in task_deps:
-            task_args[dep + "_result"] = results[dep]
         
-        # Add input data
-        task_args.update(input_data)
+        # Get the function's parameter names
+        import inspect
+        sig = inspect.signature(task_func)
+        param_names = list(sig.parameters.keys())
+        
+        # Add dependency results (matching parameter names with _result suffix)
+        for dep in task_deps:
+            arg_name = dep + "_result"
+            if arg_name in param_names:
+                task_args[arg_name] = results[dep]
+        
+        # Add input data (only include parameters that match input_data keys)
+        for key in input_data:
+            if key in param_names:
+                task_args[key] = input_data[key]
         
         # Execute task
         logger.info(f"Executing task: {task_name}")
