@@ -1,0 +1,9 @@
+TODO LIST FOR TASKINITY PROJECT
+
+- [ ] Add performance comparison metrics
+- [ ] Add more complex real-world examples
+- [ ] Add performance comparison metrics for each example
+- [ ] Update package metadata
+- [ ] Prepare for PyPI distribution
+- [ ] Create installation instructions for different scenarios
+

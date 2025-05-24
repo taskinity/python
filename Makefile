@@ -65,9 +65,22 @@ example-api:
 	@echo -e "Running API integration example..."
 	python /home/tom/github/taskinity/examples/api_flow.py --mock
 
+
+## Push changes to GitHub
+push:
+	@echo "Staging all changes..."
+	git add .
+	@echo "Enter commit message: "
+	@read MSG && git commit -m "$$MSG"
+	@echo "Pushing to GitHub..."
+	git push
+	@echo "Successfully pushed changes to GitHub!"
+
+
 ## Build and publish package to PyPI
 publish:
 	@echo "Building and publishing package..."
+	poetry version patch
 	poetry build
 	poetry publish
 
@@ -92,63 +105,66 @@ docs-preview:
 render-examples:
 	@echo "Generating example markdown with syntax highlighting and flow diagrams..."
 	@mkdir -p examples/markdown
-	@cat > examples/markdown/basic_flow.md << 'EOL'
-# Basic Flow Example
-
-This example demonstrates a simple flow with syntax highlighting and flow diagram rendering.
-
-## Flow Definition
-
-```
-flow BasicFlow:
-    description: "Simple data processing flow"
-    fetch_data -> process_data
-    process_data -> analyze_data
-    analyze_data -> visualize_results
-```
-
-## Python Implementation
-
-```python
-from taskinity import task, run_flow_from_dsl
-
-@task(name="Fetch Data")
-def fetch_data(url: str):
-    # Implementation
-    return {"data": [1, 2, 3, 4, 5]}
-
-@task(name="Process Data")
-def process_data(data):
-    # Implementation
-    return {"processed": [x * 2 for x in data["data"]]}
-
-@task(name="Analyze Data")
-def analyze_data(processed):
-    # Implementation
-    return {
-        "sum": sum(processed["processed"]),
-        "average": sum(processed["processed"]) / len(processed["processed"])
-    }
-
-@task(name="Visualize Results")
-def visualize_results(sum, average):
-    # Implementation
-    print(f"Sum: {sum}, Average: {average}")
-    return {"visualization": "chart.png"}
-
-# Define flow using DSL
-flow_dsl = """
-flow BasicFlow:
-    description: "Simple data processing flow"
-    fetch_data -> process_data
-    process_data -> analyze_data
-    analyze_data -> visualize_results
-"""
-
-# Run the flow
-results = run_flow_from_dsl(flow_dsl, {"url": "https://example.com/data"})
-```
-EOL
+	@echo "# Basic Flow Example" > examples/markdown/basic_flow.md
+	@echo "" >> examples/markdown/basic_flow.md
+	@echo "This example demonstrates a simple flow with syntax highlighting and flow diagram rendering." >> examples/markdown/basic_flow.md
+	@echo "" >> examples/markdown/basic_flow.md
+	@echo "## Flow Definition" >> examples/markdown/basic_flow.md
+	@echo "" >> examples/markdown/basic_flow.md
+	@echo '```' >> examples/markdown/basic_flow.md
+	@echo 'flow BasicFlow:' >> examples/markdown/basic_flow.md
+	@echo '    description: "Simple data processing flow"' >> examples/markdown/basic_flow.md
+	@echo '    fetch_data -> process_data' >> examples/markdown/basic_flow.md
+	@echo '    process_data -> analyze_data' >> examples/markdown/basic_flow.md
+	@echo '    analyze_data -> visualize_results' >> examples/markdown/basic_flow.md
+	@echo '```' >> examples/markdown/basic_flow.md
+	@echo "" >> examples/markdown/basic_flow.md
+	@echo "## Python Implementation" >> examples/markdown/basic_flow.md
+	@echo "" >> examples/markdown/basic_flow.md
+	@echo '```python' >> examples/markdown/basic_flow.md
+	@echo 'from taskinity import task, run_flow_from_dsl' >> examples/markdown/basic_flow.md
+	@echo '' >> examples/markdown/basic_flow.md
+	@echo '@task(name="Fetch Data")' >> examples/markdown/basic_flow.md
+	@echo 'def fetch_data(url: str):' >> examples/markdown/basic_flow.md
+	@echo '    # Implementation' >> examples/markdown/basic_flow.md
+	@echo '    return {"data": [1, 2, 3, 4, 5]}' >> examples/markdown/basic_flow.md
+	@echo '' >> examples/markdown/basic_flow.md
+	@echo '@task(name="Process Data")' >> examples/markdown/basic_flow.md
+	@echo 'def process_data(data):' >> examples/markdown/basic_flow.md
+	@echo '    # Implementation' >> examples/markdown/basic_flow.md
+	@echo '    return {"processed": [x * 2 for x in data["data"]]}' >> examples/markdown/basic_flow.md
+	@echo '' >> examples/markdown/basic_flow.md
+	@echo '@task(name="Analyze Data")' >> examples/markdown/basic_flow.md
+	@echo 'def analyze_data(processed):' >> examples/markdown/basic_flow.md
+	@echo '    # Implementation' >> examples/markdown/basic_flow.md
+	@echo '    return {' >> examples/markdown/basic_flow.md
+	@echo '        "sum": sum(processed["processed"]),' >> examples/markdown/basic_flow.md
+	@echo '        "average": sum(processed["processed"]) / len(processed["processed"])' >> examples/markdown/basic_flow.md
+	@echo '    }' >> examples/markdown/basic_flow.md
+	@echo '' >> examples/markdown/basic_flow.md
+	@echo '@task(name="Visualize Results")' >> examples/markdown/basic_flow.md
+	@echo 'def visualize_results(sum, average):' >> examples/markdown/basic_flow.md
+	@echo '    # Implementation' >> examples/markdown/basic_flow.md
+	@echo '    print(f"Sum: {sum}, Average: {average}")' >> examples/markdown/basic_flow.md
+	@echo '    return {"visualization": "chart.png"}' >> examples/markdown/basic_flow.md
+	@echo '' >> examples/markdown/basic_flow.md
+	@echo '# Define flow using DSL' >> examples/markdown/basic_flow.md
+	@echo 'flow_dsl = """' >> examples/markdown/basic_flow.md
+	@echo 'flow BasicFlow:' >> examples/markdown/basic_flow.md
+	@echo '    description: "Simple data processing flow"' >> examples/markdown/basic_flow.md
+	@echo '    fetch_data -> process_data' >> examples/markdown/basic_flow.md
+	@echo '    process_data -> analyze_data' >> examples/markdown/basic_flow.md
+	@echo '    analyze_data -> visualize_results' >> examples/markdown/basic_flow.md
+	@echo '"""' >> examples/markdown/basic_flow.md
+	@echo '' >> examples/markdown/basic_flow.md
+	@echo '# Run the flow' >> examples/markdown/basic_flow.md
+	@echo 'results = run_flow_from_dsl(flow_dsl, {"url": "https://example.com/data"})' >> examples/markdown/basic_flow.md
+	@echo '```' >> examples/markdown/basic_flow.md
+	@echo "" >> examples/markdown/basic_flow.md
+	@echo '<script src="https://taskinity.github.io/render/taskinity-render.min.js"></script>' >> examples/markdown/basic_flow.md
+	@echo "" >> examples/markdown/basic_flow.md
+	@echo "Example markdown generated at examples/markdown/basic_flow.md"
+	@echo "To view with syntax highlighting and flow diagrams, open in a browser with the taskinity-render.min.js script."
 	@echo "Example markdown generated at examples/markdown/basic_flow.md"
 	@echo "To view with syntax highlighting and flow diagrams, open in a browser with the taskinity-render.min.js script."
 
@@ -167,4 +183,9 @@ render-publish:
 	@echo "Building and publishing render package to npm..."
 	cd ../render && npm run build
 	@echo "Do you want to publish to npm? (y/n)"
-	@read CONFIRM && if [ $$CONFIRM = "y" ]; then cd ../render && npm publish; else echo "Publishing canceled"; fi
+	@read CONFIRM; \
+	if [ "$$CONFIRM" = "y" ]; then \
+		cd ../render && npm publish; \
+	else \
+		echo "Publishing canceled"; \
+	fi
